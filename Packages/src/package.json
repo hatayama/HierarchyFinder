@@ -1,25 +1,25 @@
 {
-  "name": "io.github.hatayama.{{REPOSITORY_NAME}}",
+  "name": "io.github.hatayama.hierarchyfinder",
   "version": "0.1.0",
-  "displayName": "{{REPOSITORY_NAME}}",
+  "displayName": "HierarchyFinder",
   "description": "",
   "unity": "2020.3",
-  "documentationUrl": "https://github.com/hatayama/{{REPOSITORY_NAME}}/blob/main/Packages/src/README.md",
-  "licensesUrl": "https://github.com/hatayama/{{REPOSITORY_NAME}}/blob/main/LICENSE.md",
+  "documentationUrl": "https://github.com/hatayama/HierarchyFinder/blob/main/Packages/src/README.md",
+  "licensesUrl": "https://github.com/hatayama/HierarchyFinder/blob/main/LICENSE.md",
   "author": {
     "name": "hatayama",
     "email": "booqle@gmail.com",
-    "url": "https://github.com/hatayama/{{REPOSITORY_NAME}}"
+    "url": "https://github.com/hatayama/HierarchyFinder"
   },
   "dependencies": {
   },
   "keywords": [
-    "{{REPOSITORY_NAME}}",
+    "HierarchyFinder",
     "serializefield"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hatayama/{{REPOSITORY_NAME}}.git"
+    "url": "git+https://github.com/hatayama/HierarchyFinder.git"
   }
 } 
