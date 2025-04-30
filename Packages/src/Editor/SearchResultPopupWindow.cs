@@ -12,7 +12,7 @@ namespace io.github.hatayama.HierarchyFinder
     {
         private const float SearchWindowMaxHeight = 500; // 最大高さ
         private const int MaxDisplayCount = 200; // 表示上限
-        private List<HierarchyFinderWindow.SearchResult> _results = new();
+        private List<HierarchySearchLogic.SearchResult> _results = new();
         private Vector2 _scrollPosition;
         private Action<GameObject> _onObjectSelected;
         private string _sourceIndex = string.Empty; // どの検索ボタンから開かれたかを示すインデックス
@@ -28,14 +28,14 @@ namespace io.github.hatayama.HierarchyFinder
         private Rect _closeButtonRect;
         private GUIStyle _closeButtonStyle;
 
-        public static void Show(Rect buttonRect, List<HierarchyFinderWindow.SearchResult> results, Action<GameObject> onObjectSelected,
+        public static void Show(Rect buttonRect, List<HierarchySearchLogic.SearchResult> results, Action<GameObject> onObjectSelected,
             string path)
         {
             // 同じソースインデックスからのウィンドウが既に存在する場合は閉じる
             if (_activeWindows.TryGetValue(path, out SearchResultPopupWindow existingWindow))
             {
                 // 同じウィンドウを更新（結果のリストをコピー）
-                existingWindow._results = new List<HierarchyFinderWindow.SearchResult>(results);
+                existingWindow._results = new List<HierarchySearchLogic.SearchResult>(results);
                 existingWindow._onObjectSelected = onObjectSelected;
                 existingWindow.Repaint();
                 existingWindow.Focus();
@@ -44,7 +44,7 @@ namespace io.github.hatayama.HierarchyFinder
 
             // 新しいウィンドウを作成
             SearchResultPopupWindow window = CreateInstance<SearchResultPopupWindow>();
-            window._results = new List<HierarchyFinderWindow.SearchResult>(results); // 結果のコピーを保存
+            window._results = new List<HierarchySearchLogic.SearchResult>(results); // 結果のコピーを保存
             window._onObjectSelected = onObjectSelected;
             window._sourceIndex = path;
 
@@ -55,7 +55,7 @@ namespace io.github.hatayama.HierarchyFinder
 
             // 最大幅を計算
             float maxWidth = 0;
-            foreach (HierarchyFinderWindow.SearchResult result in results)
+            foreach (HierarchySearchLogic.SearchResult result in results)
             {
                 // ボタン（オブジェクト名）の幅を計算
                 float nameWidth = buttonStyle.CalcSize(new GUIContent(result.gameObject.name)).x;
@@ -163,7 +163,7 @@ namespace io.github.hatayama.HierarchyFinder
             if (_results.Count <= 1)
             {
                 // 結果リストを表示（スクロールなし）
-                foreach (HierarchyFinderWindow.SearchResult result in _results)
+                foreach (HierarchySearchLogic.SearchResult result in _results)
                 {
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                     if (GUILayout.Button(result.gameObject.name, buttonStyle))
@@ -183,7 +183,7 @@ namespace io.github.hatayama.HierarchyFinder
                 _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
 
                 // 結果リストを表示
-                foreach (HierarchyFinderWindow.SearchResult result in _results)
+                foreach (HierarchySearchLogic.SearchResult result in _results)
                 {
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                     if (GUILayout.Button(result.gameObject.name, buttonStyle))
