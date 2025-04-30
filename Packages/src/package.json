@@ -1,0 +1,25 @@
+{
+  "name": "io.github.hatayama.{{REPOSITORY_NAME}}",
+  "version": "0.1.0",
+  "displayName": "{{REPOSITORY_NAME}}",
+  "description": "",
+  "unity": "2020.3",
+  "documentationUrl": "https://github.com/hatayama/{{REPOSITORY_NAME}}/blob/main/Packages/src/README.md",
+  "licensesUrl": "https://github.com/hatayama/{{REPOSITORY_NAME}}/blob/main/LICENSE.md",
+  "author": {
+    "name": "hatayama",
+    "email": "booqle@gmail.com",
+    "url": "https://github.com/hatayama/{{REPOSITORY_NAME}}"
+  },
+  "dependencies": {
+  },
+  "keywords": [
+    "{{REPOSITORY_NAME}}",
+    "serializefield"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hatayama/{{REPOSITORY_NAME}}.git"
+  }
+} 
