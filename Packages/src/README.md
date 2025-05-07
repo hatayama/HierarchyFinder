@@ -21,8 +21,9 @@ This package provides an editor window to efficiently find objects in Unity's hi
     *   The list content is automatically saved in UserSettings and restored when the window is next opened.
 
 This makes it easy to quickly access frequently used GameObjects or perform complex searches based on type or name patterns.
+<img width="279" alt="スクリーンショット 2025-05-08 0 07 09" src="https://github.com/user-attachments/assets/bc87bdfc-e815-47c2-9524-00ea19c05a67" />
+<img width="392" alt="スクリーンショット 2025-05-08 0 24 43" src="https://github.com/user-attachments/assets/88dd9cb6-96ae-4def-9e58-6571581b3371" />
 
-![](https://github.com/user-attachments/assets/f3d4c36f-0c85-44e1-9e5d-527a58ca2bb0)
 
 ## Installation
 ### Unity Package Manager via
