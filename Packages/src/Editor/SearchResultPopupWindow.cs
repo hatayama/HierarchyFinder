@@ -12,6 +12,7 @@ namespace io.github.hatayama.HierarchyFinder
     {
         private const float SearchWindowMaxHeight = 500; // 最大高さ
         private const int MaxDisplayCount = 200; // 表示上限
+        private const float DefaultMinWindowWidth = 240f; // ★追加: ポップアップの最小幅のデフォルト値
         private List<HierarchySearchLogic.SearchResult> _results = new();
         private Vector2 _scrollPosition;
         private Action<GameObject> _onObjectSelected;
@@ -48,23 +49,29 @@ namespace io.github.hatayama.HierarchyFinder
             window._onObjectSelected = onObjectSelected;
             window._sourceIndex = path;
 
-            // ウィンドウを登録
-            _activeWindows[path] = window;
-
             GUIStyle buttonStyle = new GUIStyle(EditorStyles.miniButton);
 
-            // 最大幅を計算
-            float maxWidth = 0;
+            // ボタンのテキストの最大幅を計算
+            float maxButtonTextWidth = 0;
             foreach (HierarchySearchLogic.SearchResult result in results)
             {
                 // ボタン（オブジェクト名）の幅を計算
                 float nameWidth = buttonStyle.CalcSize(new GUIContent(result.gameObject.name)).x;
-                // タイトルとボタンの間の余白も考慮
-                maxWidth = Mathf.Max(maxWidth, nameWidth);
+                maxButtonTextWidth = Mathf.Max(maxButtonTextWidth, nameWidth);
             }
 
-            // 計算された最大幅に余白を追加
-            maxWidth += 40;
+            // helpBox の左右パディングを取得
+            // EditorStyles.helpBox.padding は left, right, top, bottom を持つので、horizontal で左右合計を取得
+            int helpBoxHorizontalPadding = EditorStyles.helpBox.padding.horizontal;
+
+            // ボタンの最大テキスト幅に helpBox のパディングを加えたものが、コンテンツの最大幅の基本となる
+            float contentMaxWidth = maxButtonTextWidth + helpBoxHorizontalPadding;
+
+            // ウィンドウ全体の左右マージンを考慮 (例: 閉じるボタンやウィンドウ枠の視覚的な余白)
+            // この値は好みやUI全体のバランスを見て調整するとええで
+            float windowHorizontalMargin = 20f;
+            float calculatedMaxWidth = contentMaxWidth + windowHorizontalMargin;
+
 
             // コンテンツの高さを計算して、スクロールバーが必要かどうか判断
             float itemHeight = 50; // ボタン+パス+余白+ボックス
@@ -73,7 +80,7 @@ namespace io.github.hatayama.HierarchyFinder
             int itemCount = results.Count;
             if (results.Count >= MaxDisplayCount)
             {
-                itemCount = 0;
+                itemCount = 0; // MaxDisplayCount以上の場合はメッセージ表示のため、アイテムカウントは0扱い
             }
 
             float contentHeight = (itemCount * itemHeight) + titleHeight + 20; // 上下に少し余白を追加
@@ -81,24 +88,30 @@ namespace io.github.hatayama.HierarchyFinder
 
             // 実際に表示する高さを決定
             float height = needsScrollbar ? SearchWindowMaxHeight : contentHeight;
-            // スクロールバーが必要な場合、より広い幅を確保
+
+            // スクロールバーが必要な場合、その幅を考慮して calculatedMaxWidth を調整
             if (needsScrollbar)
             {
-                maxWidth += 30; // スクロールバーの幅を追加し、余裕を持たせる
+                // Unity標準のスクロールバーの幅は大体15-20px程度やけど、
+                // スキンによって変わる可能性もあるから、少し余裕を見て固定値で加算する。
+                // GUI.skin.verticalScrollbar.fixedWidth は OnGUI 外では信頼できない場合があるから注意や。
+                calculatedMaxWidth += 25f; // スクロールバーの幅と、隣接するコンテンツとの間のわずかな余白を考慮
             }
 
-            // 最小幅を設定し、スクロールバーが出ないように十分な幅を確保
-            float width = Mathf.Max(maxWidth, 350);
+            // 最小幅を設定。これより小さくはならんようにする。
+            // 例えば、ウィンドウタイトルや閉じるボタンが最低限表示できる幅は確保したいところやな。
+            float minWindowWidth = DefaultMinWindowWidth; // ★変更: 定数を使用
+            float finalWidth = Mathf.Max(calculatedMaxWidth, minWindowWidth);
 
             // ウィンドウの位置を設定（検索ボタンの右下とポップアップの右上が一致するように）
             Vector2 popupPosition = GUIUtility.GUIToScreenPoint(
                 new Vector2(buttonRect.x + buttonRect.width, buttonRect.y + buttonRect.height));
 
             // ポップアップの右上をボタンの右下に合わせる
-            popupPosition = new Vector2(popupPosition.x - width, popupPosition.y);
+            popupPosition = new Vector2(popupPosition.x - finalWidth, popupPosition.y);
 
             // ポップアップウィンドウとして表示
-            window.position = new Rect(popupPosition.x, popupPosition.y, width, height);
+            window.position = new Rect(popupPosition.x, popupPosition.y, finalWidth, height);
             window.ShowPopup();
 
             // 初期化用にRepaintを呼ぶ
