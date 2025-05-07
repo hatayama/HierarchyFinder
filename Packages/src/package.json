@@ -1,6 +1,6 @@
 {
   "name": "io.github.hatayama.hierarchyfinder",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "displayName": "HierarchyFinder",
   "description": "",
   "unity": "2020.3",
@@ -11,8 +11,7 @@
     "email": "booqle@gmail.com",
     "url": "https://github.com/hatayama/HierarchyFinder"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "keywords": [
     "HierarchyFinder",
     "serializefield"
