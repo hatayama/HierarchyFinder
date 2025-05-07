@@ -80,7 +80,7 @@ namespace io.github.hatayama.HierarchyFinder
             bool needsScrollbar = contentHeight > SearchWindowMaxHeight;
 
             // 実際に表示する高さを決定
-            float height = needsScrollbar? SearchWindowMaxHeight: contentHeight;
+            float height = needsScrollbar ? SearchWindowMaxHeight : contentHeight;
             // スクロールバーが必要な場合、より広い幅を確保
             if (needsScrollbar)
             {
@@ -144,18 +144,18 @@ namespace io.github.hatayama.HierarchyFinder
             pathStyle.normal.textColor = new Color(0.7f, 0.7f, 0.7f);
 
             // 検索結果のタイトル
-            GUILayout.Label($"検索結果 ({_results.Count}件)", EditorStyles.boldLabel);
+            GUILayout.Label($"Search Results ({_results.Count} items)", EditorStyles.boldLabel);
             EditorGUILayout.Space(2);
 
             if (_results.Count == 0)
             {
-                GUILayout.Label($"何も見つかりませんでした", EditorStyles.label);
+                GUILayout.Label($"Nothing found", EditorStyles.label);
                 return;
             }
 
             if (_results.Count >= MaxDisplayCount)
             {
-                GUILayout.Label($"検索結果が多すぎます。gameObject名で絞り込むか、paste機能の利用をお勧めします。", EditorStyles.label);
+                GUILayout.Label($"Too many search results. \nWe recommend narrowing down by gameObject name or using the paste function.", EditorStyles.label);
                 return;
             }
 

@@ -2,9 +2,8 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using UnityEditor; // FindObjectsByType のために必要
-using System.Text; // StringBuilder のために必要
-using System.Linq; // LINQ を使うために追加
+using System.Text;
+using System.Linq;
 
 namespace io.github.hatayama.HierarchyFinder
 {
@@ -32,7 +31,7 @@ namespace io.github.hatayama.HierarchyFinder
             List<SearchResult> results = new List<SearchResult>();
             if (string.IsNullOrWhiteSpace(searchQuery))
             {
-                return results; // クエリが空なら何も返さん
+                return results;
             }
 
             GameObject[] gameObjects = UnityEngine.Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -64,9 +63,9 @@ namespace io.github.hatayama.HierarchyFinder
             bool useNameGlob = isNameFilterEnabled && (nameFilter.Contains("*") || nameFilter.Contains("?"));
             if (useNameGlob)
             {
-                 // 名前フィルター Glob があれば正規表現に変換 (Unity仕様のGlobToRegexを使用)
-                 // 名前には / が含まれない想定なので、* と ** の違いは影響しないはず
-                 nameRegex = new Regex(GlobToRegex(nameFilter), RegexOptions.IgnoreCase);
+                // 名前フィルター Glob があれば正規表現に変換 (Unity仕様のGlobToRegexを使用)
+                // 名前には / が含まれない想定なので、* と ** の違いは影響しないはず
+                nameRegex = new Regex(GlobToRegex(nameFilter), RegexOptions.IgnoreCase);
             }
 
 
@@ -86,6 +85,7 @@ namespace io.github.hatayama.HierarchyFinder
                         // 通常の型名マッチング (GameObject 特殊ケース含む)
                         typeMatch = typePattern.Equals("GameObject", StringComparison.OrdinalIgnoreCase) || GameObjectHasComponentType(obj, typePattern);
                     }
+
                     if (!typeMatch) continue; // 型がマッチしなければ次へ
                 }
 
@@ -110,8 +110,9 @@ namespace io.github.hatayama.HierarchyFinder
                     else
                     {
                         // 通常の部分一致
-                         nameMatch = ContainsIgnoreCase(obj.name, nameFilter);
+                        nameMatch = ContainsIgnoreCase(obj.name, nameFilter);
                     }
+
                     if (!nameMatch) continue; // 名前がマッチしなければ次へ
                 }
 
@@ -120,6 +121,7 @@ namespace io.github.hatayama.HierarchyFinder
                 {
                     path = GetGameObjectPath(obj);
                 }
+
                 results.Add(new SearchResult(obj, path));
             }
 
@@ -155,7 +157,7 @@ namespace io.github.hatayama.HierarchyFinder
             return string.Join("/", pathParts);
         }
 
-        // クエリ文字列を解析して、型パターン、名前フィルター、パス Glob パターンを抽出するメソッドや
+        // クエリ文字列を解析して、型パターン、名前フィルター、パス Glob パターンを抽出するメソッド
         private static (string typePattern, string nameFilter, string pathGlobPattern) ParseQuery(string searchQuery)
         {
             // NOTE: この解析ロジックは、t: の後が名前フィルターかパスGlobか を / の有無だけで判断している。
@@ -179,7 +181,7 @@ namespace io.github.hatayama.HierarchyFinder
                     if (restPart.Contains("/") || restPart.Contains("*") || restPart.Contains("?"))
                     {
                         pathGlobPattern = restPart; // パス Glob パターンとして扱う
-                        nameFilter = null;          // パス Glob があれば名前フィルターは使わない
+                        nameFilter = null; // パス Glob があれば名前フィルターは使わない
                     }
                     else
                     {
@@ -206,9 +208,9 @@ namespace io.github.hatayama.HierarchyFinder
             // t: もなく、Glob もない場合は純粋な名前フィルター
             else
             {
-                 nameFilter = searchQuery;
-                 typePattern = null;
-                 pathGlobPattern = null;
+                nameFilter = searchQuery;
+                typePattern = null;
+                pathGlobPattern = null;
             }
 
             return (typePattern, nameFilter, pathGlobPattern);
@@ -219,11 +221,12 @@ namespace io.github.hatayama.HierarchyFinder
         private static bool MatchesTypeGlobPattern(GameObject obj, Regex typeRegex)
         {
             // GameObject 自体の型もチェック (例: t:GameObject* の場合)
-             if (typeRegex.IsMatch("GameObject")) {
-                 // 型パターンが "GameObject" (またはそれにマッチするパターン) なら、
-                 // null でない GameObject は常にマッチするとみなす
-                 if (obj != null) return true;
-             }
+            if (typeRegex.IsMatch("GameObject"))
+            {
+                // 型パターンが "GameObject" (またはそれにマッチするパターン) なら、
+                // null でない GameObject は常にマッチするとみなす
+                if (obj != null) return true;
+            }
 
             Component[] components = obj.GetComponents<Component>();
             foreach (Component comp in components)
@@ -238,6 +241,7 @@ namespace io.github.hatayama.HierarchyFinder
                     {
                         return true; // 一致する型が見つかった
                     }
+
                     currentType = currentType.BaseType; // 親クラスをチェック
                 }
             }
@@ -250,11 +254,12 @@ namespace io.github.hatayama.HierarchyFinder
         {
             StringBuilder regexBuilder = new StringBuilder();
             // パターンの先頭に ^ を追加 (既についていなければ)
-            if (string.IsNullOrEmpty(globPattern) || globPattern[0] != '^') {
-                 regexBuilder.Append('^');
+            if (string.IsNullOrEmpty(globPattern) || globPattern[0] != '^')
+            {
+                regexBuilder.Append('^');
             }
 
-            // foreach ではなくインデックスでループして先読みするで
+            // foreach ではなくインデックスでループして先読みする
             for (int i = 0; i < globPattern.Length; i++)
             {
                 char c = globPattern[i];
@@ -274,6 +279,7 @@ namespace io.github.hatayama.HierarchyFinder
                             // "*" はスラッシュ以外の0文字以上にマッチ -> [^/]*
                             regexBuilder.Append("[^/]*");
                         }
+
                         break;
                     case '?':
                         // "?" はスラッシュ以外の任意の一文字 -> [^/]
@@ -302,8 +308,9 @@ namespace io.github.hatayama.HierarchyFinder
             }
 
             // パターンの末尾に $ を追加 (既についていなければ)
-             if (string.IsNullOrEmpty(globPattern) || globPattern[globPattern.Length -1] != '$') {
-                 regexBuilder.Append('$');
+            if (string.IsNullOrEmpty(globPattern) || globPattern[globPattern.Length - 1] != '$')
+            {
+                regexBuilder.Append('$');
             }
 
             return regexBuilder.ToString();
@@ -324,6 +331,7 @@ namespace io.github.hatayama.HierarchyFinder
                     return true; // 一致するコンポーネントが見つかった
                 }
             }
+
             return false; // 一致するコンポーネントが見つからなかった
         }
 
@@ -333,14 +341,16 @@ namespace io.github.hatayama.HierarchyFinder
             Type currentType = componentType;
             while (currentType != null && currentType != typeof(object))
             {
-                 // 完全修飾名でも比較 (ユーザー提供コードのロジック)
+                // 完全修飾名でも比較 (ユーザー提供コードのロジック)
                 if (currentType.Name.Equals(typeToFind, StringComparison.OrdinalIgnoreCase) ||
                     currentType.FullName.Equals(typeToFind, StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
+
                 currentType = currentType.BaseType;
             }
+
             return false;
         }
 
@@ -369,4 +379,4 @@ namespace io.github.hatayama.HierarchyFinder
             return path;
         }
     }
-} 
+}

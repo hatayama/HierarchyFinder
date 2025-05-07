@@ -137,9 +137,9 @@ namespace io.github.hatayama.HierarchyFinder
             bool containsGlob = !string.IsNullOrEmpty(fieldValue) && (fieldValue.Contains("*") || fieldValue.Contains("?"));
 
             // ボタン表示ロジックをシンプルに
-            bool showSearchIcon = containsT || containsGlob;       // t: を含むか、Glob文字を含めば検索アイコン表示
-            bool showPasteButton = containsT && !containsGlob;      // t: を含み、かつGlob文字を含まない場合のみPasteボタン表示
-            bool showPingButton = !containsT && !containsGlob;      // t: もGlob文字も含まない場合のみPingボタン表示
+            bool showSearchIcon = containsT || containsGlob; // t: を含むか、Glob文字を含めば検索アイコン表示
+            bool showPasteButton = containsT && !containsGlob; // t: を含み、かつGlob文字を含まない場合のみPasteボタン表示
+            bool showPingButton = !containsT && !containsGlob; // t: もGlob文字も含まない場合のみPingボタン表示
 
             // 横方向のレイアウト調整
             float magnifyIconButtonWidth = 25; // 検索アイコンの幅
@@ -153,10 +153,12 @@ namespace io.github.hatayama.HierarchyFinder
             {
                 actionsWidth += magnifyIconButtonWidth + spacing;
             }
+
             if (showPasteButton)
             {
                 actionsWidth += buttonWidth + spacing;
             }
+
             if (showPingButton)
             {
                 actionsWidth += buttonWidth + spacing;
@@ -186,27 +188,29 @@ namespace io.github.hatayama.HierarchyFinder
                     SearchObjectsAndShowPopup(fieldValue, searchButtonRect);
                     GUIUtility.ExitGUI();
                 }
-                 currentX += magnifyIconButtonWidth + spacing;
+
+                currentX += magnifyIconButtonWidth + spacing;
             }
 
             if (showPasteButton)
             {
-                 Rect pasteButtonRect = new Rect(currentX, rect.y, buttonWidth, rect.height);
-                 if (GUI.Button(pasteButtonRect, ButtonTexts.Paste))
-                 {
-                     SetHierarchySearchFilter(fieldValue);
-                 }
-                 currentX += buttonWidth + spacing;
+                Rect pasteButtonRect = new Rect(currentX, rect.y, buttonWidth, rect.height);
+                if (GUI.Button(pasteButtonRect, ButtonTexts.Paste))
+                {
+                    SetHierarchySearchFilter(fieldValue);
+                }
+
+                currentX += buttonWidth + spacing;
             }
 
             if (showPingButton)
             {
-                 Rect pingButtonRect = new Rect(currentX, rect.y, buttonWidth, rect.height);
-                 if (GUI.Button(pingButtonRect, ButtonTexts.Ping))
-                 {
-                     PingObject(index, pingButtonRect);
-                 }
-                 // Pingボタンが最後なので currentX の更新は不要や
+                Rect pingButtonRect = new Rect(currentX, rect.y, buttonWidth, rect.height);
+                if (GUI.Button(pingButtonRect, ButtonTexts.Ping))
+                {
+                    PingObject(index, pingButtonRect);
+                }
+                // Pingボタンが最後なので currentX の更新は不要や
             }
 
             // 削除ボタン (変更なし)
@@ -237,10 +241,7 @@ namespace io.github.hatayama.HierarchyFinder
                 SavePaths();
             };
 
-            _reorderableList.onReorderCallback = (ReorderableList list) =>
-            {
-                SavePaths();
-            };
+            _reorderableList.onReorderCallback = (ReorderableList list) => { SavePaths(); };
         }
 
         // 通常のパスからGameObjectを検索してPing
@@ -366,31 +367,35 @@ namespace io.github.hatayama.HierarchyFinder
             // SetSearchFilter メソッドをリフレクションで取得
             // 引数が4つのオーバーロード (string, SearchMode, bool, bool) を試す
             MethodInfo setSearchFilterMethod = null;
-            try {
-                 // SearchMode enum の型を取得
-                 Type searchModeType = typeof(EditorWindow).Assembly.GetType("UnityEditor.SearchableEditorWindow+SearchMode");
-                 if (searchModeType != null) {
-                     setSearchFilterMethod = searchableEditorWindowType.GetMethod("SetSearchFilter",
+            try
+            {
+                // SearchMode enum の型を取得
+                Type searchModeType = typeof(EditorWindow).Assembly.GetType("UnityEditor.SearchableEditorWindow+SearchMode");
+                if (searchModeType != null)
+                {
+                    setSearchFilterMethod = searchableEditorWindowType.GetMethod("SetSearchFilter",
                         BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance,
                         null, // Binder
                         new Type[] { typeof(string), searchModeType, typeof(bool), typeof(bool) }, // 引数の型を指定
                         null); // ParameterModifier
-                 }
-            } catch (Exception e) {
-                 Debug.LogWarning($"SetSearchFilter (4 args) の取得に失敗しました: {e.Message}");
-                 setSearchFilterMethod = null; // 取得失敗
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"SetSearchFilter (4 args) の取得に失敗しました: {e.Message}");
+                setSearchFilterMethod = null; // 取得失敗
             }
 
 
             if (setSearchFilterMethod != null)
             {
-                 // 引数が4つのバージョンの SearchMode enum の値を取得 (All)
-                 Type searchModeType = typeof(EditorWindow).Assembly.GetType("UnityEditor.SearchableEditorWindow+SearchMode");
-                 object searchModeAll = Enum.Parse(searchModeType, "All");
+                // 引数が4つのバージョンの SearchMode enum の値を取得 (All)
+                Type searchModeType = typeof(EditorWindow).Assembly.GetType("UnityEditor.SearchableEditorWindow+SearchMode");
+                object searchModeAll = Enum.Parse(searchModeType, "All");
 
-                 // 引数が4つのバージョンのメソッドを実行
-                 setSearchFilterMethod.Invoke(hierarchyWindow,
-                     new object[] { searchString, searchModeAll, true, false });
+                // 引数が4つのバージョンのメソッドを実行
+                setSearchFilterMethod.Invoke(hierarchyWindow,
+                    new object[] { searchString, searchModeAll, true, false });
             }
             else
             {
@@ -401,13 +406,15 @@ namespace io.github.hatayama.HierarchyFinder
                     new Type[] { typeof(string), typeof(bool), typeof(bool) },
                     null);
 
-                if (setSearchFilterMethod == null) {
-                     Debug.LogError("SetSearchFilter メソッドが見つかりませんでした。");
-                     return;
+                if (setSearchFilterMethod == null)
+                {
+                    Debug.LogError("SetSearchFilter メソッドが見つかりませんでした。");
+                    return;
                 }
-                 // 引数が3つのバージョンのメソッドを実行
-                 setSearchFilterMethod.Invoke(hierarchyWindow,
-                     new object[] { searchString, true, false });
+
+                // 引数が3つのバージョンのメソッドを実行
+                setSearchFilterMethod.Invoke(hierarchyWindow,
+                    new object[] { searchString, true, false });
             }
 
 
