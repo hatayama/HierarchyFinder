@@ -20,9 +20,14 @@ This package provides an editor window to efficiently find objects in Unity's hi
     *   Click the `-` button to delete a path.
     *   The list content is automatically saved in UserSettings and restored when the window is next opened.
 
-This makes it easy to quickly access frequently used GameObjects or perform complex searches based on type or name patterns.
+* This makes it easy to quickly access frequently used GameObjects or perform complex searches based on type or name patterns.
+
+### [Display example]
 <img width="279" alt="スクリーンショット 2025-05-08 0 07 09" src="https://github.com/user-attachments/assets/bc87bdfc-e815-47c2-9524-00ea19c05a67" />
-<img width="392" alt="スクリーンショット 2025-05-08 0 24 43" src="https://github.com/user-attachments/assets/88dd9cb6-96ae-4def-9e58-6571581b3371" />
+
+### [Display of multiple selections]
+<img width="277" alt="スクリーンショット 2025-05-08 0 34 07" src="https://github.com/user-attachments/assets/8f8154ac-a438-415e-8c38-7df0254685c1" />
+
 
 
 ## Installation
