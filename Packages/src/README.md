@@ -22,6 +22,8 @@ This package provides an editor window to efficiently find objects in Unity's hi
 
 This makes it easy to quickly access frequently used GameObjects or perform complex searches based on type or name patterns.
 
+![](https://github.com/user-attachments/assets/f3d4c36f-0c85-44e1-9e5d-527a58ca2bb0)
+
 ## Installation
 ### Unity Package Manager via
 
