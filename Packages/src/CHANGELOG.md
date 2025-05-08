@@ -5,9 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.1.1](https://github.com/hatayama/HierarchyFinder/compare/v0.1.0...v0.1.1) (2025-05-08)
+
+
+### Bug Fixes
+
+* change asmdef name ([2998d6c](https://github.com/hatayama/HierarchyFinder/commit/2998d6c9d71eb9bcc9db3f340894ff2d2c2f2476))
+
 ## [0.1.0] - 2024-04-07
 
 ### Added
 - 初期リリース
 - Inspectorの値を他のコンポーネントにバインドする基本機能
-- サンプルシーン 
+- サンプルシーン
