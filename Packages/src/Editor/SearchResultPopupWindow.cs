@@ -6,36 +6,36 @@ using System.Collections.Generic;
 namespace io.github.hatayama.HierarchyFinder
 {
     /// <summary>
-    /// 検索結果を表示するためのポップアップウィンドウクラス
+    /// Popup window class to display search results.
     /// </summary>
     public class SearchResultPopupWindow : EditorWindow
     {
-        private const float SearchWindowMaxHeight = 500; // 最大高さ
-        private const int MaxDisplayCount = 200; // 表示上限
-        private const float DefaultMinWindowWidth = 240f; // ★追加: ポップアップの最小幅のデフォルト値
+        private const float SearchWindowMaxHeight = 500; // Maximum height
+        private const int MaxDisplayCount = 200; // Display limit
+        private const float DefaultMinWindowWidth = 240f; // Default minimum width of the popup
         private List<HierarchySearchLogic.SearchResult> _results = new();
         private Vector2 _scrollPosition;
         private Action<GameObject> _onObjectSelected;
-        private string _sourceIndex = string.Empty; // どの検索ボタンから開かれたかを示すインデックス
+        private string _sourceIndex = string.Empty; // Index indicating which search button opened this
 
-        // 各検索ボタン（入力欄インデックス）ごとに開いているウィンドウを追跡する辞書
+        // Dictionary to track open windows for each search button (input field index)
         private static Dictionary<string, SearchResultPopupWindow> _activeWindows = new();
 
-        // ウィンドウのドラッグ処理用
+        // For window drag processing
         private Vector2 _dragStartPosition;
         private bool _isDragging = false;
 
-        // 閉じるボタン用
+        // For close button
         private Rect _closeButtonRect;
         private GUIStyle _closeButtonStyle;
 
         public static void Show(Rect buttonRect, List<HierarchySearchLogic.SearchResult> results, Action<GameObject> onObjectSelected,
             string path)
         {
-            // 同じソースインデックスからのウィンドウが既に存在する場合は閉じる
+            // If a window from the same source index already exists, close it
             if (_activeWindows.TryGetValue(path, out SearchResultPopupWindow existingWindow))
             {
-                // 同じウィンドウを更新（結果のリストをコピー）
+                // Update the same window (copy the list of results)
                 existingWindow._results = new List<HierarchySearchLogic.SearchResult>(results);
                 existingWindow._onObjectSelected = onObjectSelected;
                 existingWindow.Repaint();
@@ -43,88 +43,88 @@ namespace io.github.hatayama.HierarchyFinder
                 return;
             }
 
-            // 新しいウィンドウを作成
+            // Create a new window
             SearchResultPopupWindow window = CreateInstance<SearchResultPopupWindow>();
-            window._results = new List<HierarchySearchLogic.SearchResult>(results); // 結果のコピーを保存
+            window._results = new List<HierarchySearchLogic.SearchResult>(results); // Save a copy of the results
             window._onObjectSelected = onObjectSelected;
             window._sourceIndex = path;
 
             GUIStyle buttonStyle = new GUIStyle(EditorStyles.miniButton);
 
-            // ボタンのテキストの最大幅を計算
+            // Calculate the maximum width of the button text
             float maxButtonTextWidth = 0;
             foreach (HierarchySearchLogic.SearchResult result in results)
             {
-                // ボタン（オブジェクト名）の幅を計算
+                // Calculate the width of the button (object name)
                 float nameWidth = buttonStyle.CalcSize(new GUIContent(result.gameObject.name)).x;
                 maxButtonTextWidth = Mathf.Max(maxButtonTextWidth, nameWidth);
             }
 
-            // helpBox の左右パディングを取得
-            // EditorStyles.helpBox.padding は left, right, top, bottom を持つので、horizontal で左右合計を取得
+            // Get left and right padding of helpBox
+            // EditorStyles.helpBox.padding has left, right, top, bottom, so get the total horizontal padding
             int helpBoxHorizontalPadding = EditorStyles.helpBox.padding.horizontal;
 
-            // ボタンの最大テキスト幅に helpBox のパディングを加えたものが、コンテンツの最大幅の基本となる
+            // The maximum text width of the button plus the helpBox padding is the basis for the maximum content width
             float contentMaxWidth = maxButtonTextWidth + helpBoxHorizontalPadding;
 
-            // ウィンドウ全体の左右マージンを考慮 (例: 閉じるボタンやウィンドウ枠の視覚的な余白)
-            // この値は好みやUI全体のバランスを見て調整するとええで
+            // Consider the left and right margins of the entire window (e.g., visual margins for the close button and window frame)
+            // Adjust this value based on preference and the overall balance of the UI
             float windowHorizontalMargin = 20f;
             float calculatedMaxWidth = contentMaxWidth + windowHorizontalMargin;
 
 
-            // コンテンツの高さを計算して、スクロールバーが必要かどうか判断
-            float itemHeight = 50; // ボタン+パス+余白+ボックス
-            float titleHeight = 30; // タイトルと余白の高さ
+            // Calculate content height to determine if a scrollbar is needed
+            float itemHeight = 50; // Button + path + margin + box
+            float titleHeight = 30; // Height of title and margin
 
             int itemCount = results.Count;
             if (results.Count >= MaxDisplayCount)
             {
-                itemCount = 0; // MaxDisplayCount以上の場合はメッセージ表示のため、アイテムカウントは0扱い
+                itemCount = 0; // If MaxDisplayCount or more, treat item count as 0 for message display
             }
 
-            float contentHeight = (itemCount * itemHeight) + titleHeight + 20; // 上下に少し余白を追加
+            float contentHeight = (itemCount * itemHeight) + titleHeight + 20; // Add some margin top and bottom
             bool needsScrollbar = contentHeight > SearchWindowMaxHeight;
 
-            // 実際に表示する高さを決定
+            // Determine the actual display height
             float height = needsScrollbar ? SearchWindowMaxHeight : contentHeight;
 
-            // スクロールバーが必要な場合、その幅を考慮して calculatedMaxWidth を調整
+            // If a scrollbar is needed, adjust calculatedMaxWidth to account for its width
             if (needsScrollbar)
             {
-                // Unity標準のスクロールバーの幅は大体15-20px程度やけど、
-                // スキンによって変わる可能性もあるから、少し余裕を見て固定値で加算する。
-                // GUI.skin.verticalScrollbar.fixedWidth は OnGUI 外では信頼できない場合があるから注意や。
-                calculatedMaxWidth += 25f; // スクロールバーの幅と、隣接するコンテンツとの間のわずかな余白を考慮
+                // The width of a standard Unity scrollbar is about 15-20px,
+                // but it can change depending on the skin, so add a fixed value with some leeway.
+                // Be careful as GUI.skin.verticalScrollbar.fixedWidth may not be reliable outside OnGUI.
+                calculatedMaxWidth += 25f; // Consider the width of the scrollbar and a small margin between it and adjacent content
             }
 
-            // 最小幅を設定。これより小さくはならんようにする。
-            // 例えば、ウィンドウタイトルや閉じるボタンが最低限表示できる幅は確保したいところやな。
-            float minWindowWidth = DefaultMinWindowWidth; // ★変更: 定数を使用
+            // Set the minimum width. It won't get smaller than this.
+            // For example, we want to ensure enough width to display the window title and close button at a minimum.
+            float minWindowWidth = DefaultMinWindowWidth; // ★Changed: Use constant
             float finalWidth = Mathf.Max(calculatedMaxWidth, minWindowWidth);
 
-            // ウィンドウの位置を設定（検索ボタンの右下とポップアップの右上が一致するように）
+            // Set window position (so that the bottom right of the search button aligns with the top right of the popup)
             Vector2 popupPosition = GUIUtility.GUIToScreenPoint(
                 new Vector2(buttonRect.x + buttonRect.width, buttonRect.y + buttonRect.height));
 
-            // ポップアップの右上をボタンの右下に合わせる
+            // Align the top right of the popup with the bottom right of the button
             popupPosition = new Vector2(popupPosition.x - finalWidth, popupPosition.y);
 
-            // ポップアップウィンドウとして表示
+            // Display as a popup window
             window.position = new Rect(popupPosition.x, popupPosition.y, finalWidth, height);
             window.ShowPopup();
 
-            // 初期化用にRepaintを呼ぶ
+            // Call Repaint for initialization
             window.Repaint();
         }
 
         private void OnGUI()
         {
-            // 背景
+            // Background
             EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), new Color(0.2f, 0.2f, 0.2f, 1f));
 
-            // 閉じるボタンを描画（右上）
-            // 閉じるボタン用スタイルの初期化
+            // Draw close button (top right)
+            // Initialize style for close button
             _closeButtonStyle = new GUIStyle(EditorStyles.miniButton);
             _closeButtonStyle.normal.textColor = Color.white;
             _closeButtonStyle.fontSize = 16;
@@ -136,27 +136,27 @@ namespace io.github.hatayama.HierarchyFinder
             if (GUI.Button(_closeButtonRect, "×", _closeButtonStyle))
             {
                 Close();
-                // イベントを使用して、下にあるUIへの伝播を防ぐ
+                // Use event to prevent propagation to underlying UI
                 Event.current.Use();
                 return;
             }
 
-            // UIレイアウトの開始
+            // Start UI layout
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             EditorGUILayout.Space(5);
 
-            // ボタンのGUIスタイルをカスタマイズ
+            // Customize GUI style for buttons
             GUIStyle buttonStyle = new GUIStyle(EditorStyles.miniButton);
-            buttonStyle.alignment = TextAnchor.MiddleCenter; // 中央寄せ
+            buttonStyle.alignment = TextAnchor.MiddleCenter; // Center align
 
-            // パス表示用のGUIスタイルをカスタマイズ
+            // Customize GUI style for path display
             GUIStyle pathStyle = new GUIStyle(EditorStyles.wordWrappedLabel);
             pathStyle.wordWrap = true;
             pathStyle.fontSize = 10;
             pathStyle.normal.textColor = new Color(0.7f, 0.7f, 0.7f);
 
-            // 検索結果のタイトル
+            // Title for search results
             GUILayout.Label($"Search Results ({_results.Count} items)", EditorStyles.boldLabel);
             EditorGUILayout.Space(2);
 
@@ -172,10 +172,10 @@ namespace io.github.hatayama.HierarchyFinder
                 return;
             }
 
-            // 検索結果1件の場合はスクロールバーを無効化
+            // Disable scrollbar if there is only one search result
             if (_results.Count <= 1)
             {
-                // 結果リストを表示（スクロールなし）
+                // Display result list (no scroll)
                 foreach (HierarchySearchLogic.SearchResult result in _results)
                 {
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -184,7 +184,7 @@ namespace io.github.hatayama.HierarchyFinder
                         _onObjectSelected?.Invoke(result.gameObject);
                     }
 
-                    // パスをラベルとして表示
+                    // Display path as label
                     EditorGUILayout.LabelField(result.path, pathStyle);
                     EditorGUILayout.EndVertical();
                     EditorGUILayout.Space(2);
@@ -192,10 +192,10 @@ namespace io.github.hatayama.HierarchyFinder
             }
             else
             {
-                // 検索結果のスクロールビュー（複数件の場合のみ）
+                // Scroll view for search results (only if multiple items)
                 _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
 
-                // 結果リストを表示
+                // Display result list
                 foreach (HierarchySearchLogic.SearchResult result in _results)
                 {
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -204,7 +204,7 @@ namespace io.github.hatayama.HierarchyFinder
                         _onObjectSelected?.Invoke(result.gameObject);
                     }
 
-                    // パスをラベルとして表示
+                    // Display path as label
                     EditorGUILayout.LabelField(result.path, pathStyle);
                     EditorGUILayout.EndVertical();
                     EditorGUILayout.Space(2);
@@ -221,7 +221,7 @@ namespace io.github.hatayama.HierarchyFinder
                 Event.current.Use();
             }
 
-            // 処理順序の変更: すべてのGUIが描画された後でドラッグ処理をチェック
+            // Change processing order: check drag processing after all GUI is drawn
             HandleWindowDrag();
         }
 
@@ -229,16 +229,16 @@ namespace io.github.hatayama.HierarchyFinder
         {
             Event evt = Event.current;
 
-            // 閉じるボタン上ではドラッグを開始しない
+            // Do not start drag on the close button
             if (_closeButtonRect.Contains(evt.mousePosition)) return;
 
             switch (evt.type)
             {
                 case EventType.MouseDown:
-                    if (evt.button == 0) // 左クリック
+                    if (evt.button == 0) // Left click
                     {
-                        // ドラッグを開始する前に、このイベントが他のコントロールに処理されないか確認
-                        // (ボタンなどのUI要素の上にマウスがある場合は、ドラッグを開始しない)
+                        // Before starting drag, check if this event is not processed by other controls
+                        // (Do not start drag if the mouse is over UI elements like buttons)
                         if (!EditorGUIUtility.hotControl.Equals(0)) return;
 
                         _isDragging = true;
@@ -275,7 +275,7 @@ namespace io.github.hatayama.HierarchyFinder
 
         private void OnDestroy()
         {
-            // ウィンドウが閉じられたら辞書から削除
+            // Remove from dictionary when window is closed
             if (!string.IsNullOrEmpty(_sourceIndex) && _activeWindows.ContainsKey(_sourceIndex))
             {
                 _activeWindows.Remove(_sourceIndex);
