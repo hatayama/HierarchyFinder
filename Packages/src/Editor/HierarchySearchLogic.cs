@@ -199,58 +199,88 @@ namespace io.github.hatayama.HierarchyFinder
                     pathGlobPattern = null;
                 }
             }
-            // If there's no "t:" and it contains * or ?, it's a pure path Glob pattern
-            else if (searchQuery.Contains("*") || searchQuery.Contains("?"))
+            
+            else if (searchQuery.Contains("/") || searchQuery.Contains("*") || searchQuery.Contains("?"))
             {
+                // "t:" で始まらず、"/" か Glob文字 を含む場合は、パスGlobパターンとみなす
                 pathGlobPattern = searchQuery;
-                typePattern = null;
                 nameFilter = null;
-            }
-            // If there's no "t:" and no Glob, it's a pure name filter
-            else
-            {
-                nameFilter = searchQuery;
                 typePattern = null;
+            }
+            else if (!string.IsNullOrEmpty(searchQuery)) // 空でないことを確認
+            {
+                // "t:" で始まらず、"/" も Glob文字 も含まない場合は、名前フィルターとみなす
+                nameFilter = searchQuery;
                 pathGlobPattern = null;
+                typePattern = null;
             }
 
             return (typePattern, nameFilter, pathGlobPattern);
         }
 
-
-        // Check if the type name (including base classes) of components a GameObject has matches the specified type Glob pattern
-        private static bool MatchesTypeGlobPattern(GameObject obj, Regex typeRegex)
+        // Check if a GameObject has a component of the specified type (case-insensitive)
+        private static bool GameObjectHasComponentType(GameObject obj, string typeToFind)
         {
-            // Also check the type of GameObject itself (e.g., for t:GameObject*)
-            if (typeRegex.IsMatch("GameObject"))
-            {
-                // If the type pattern is "GameObject" (or a pattern that matches it),
-                // any non-null GameObject is always considered a match.
-                if (obj != null) return true;
-            }
-
             Component[] components = obj.GetComponents<Component>();
             foreach (Component comp in components)
             {
                 if (comp == null) continue;
 
-                Type currentType = comp.GetType();
-                while (currentType != null && currentType != typeof(object))
+                Type componentType = comp.GetType();
+                if (IsTypeOrBaseTypeMatch(componentType, typeToFind))
                 {
-                    // Check if the type name (simple name) matches the Glob pattern (regex)
-                    if (typeRegex.IsMatch(currentType.Name))
-                    {
-                        return true; // Found a matching type
-                    }
-
-                    currentType = currentType.BaseType; // Check parent class
+                    return true; // Found a matching component
                 }
             }
 
-            return false; // No matching type found
+            return false; // No matching component found
         }
 
-        // Helper method to convert Glob pattern to regex pattern (modified for Unity spec * and **)
+        // Method to check if a type or its base class matches the specified type name
+        private static bool IsTypeOrBaseTypeMatch(Type componentType, string typeToFind)
+        {
+            Type currentType = componentType;
+            while (currentType != null && currentType != typeof(object))
+            {
+                // Also compare with fully qualified name (logic from user-provided code)
+                if (currentType.Name.Equals(typeToFind, StringComparison.OrdinalIgnoreCase) ||
+                    currentType.FullName.Equals(typeToFind, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                currentType = currentType.BaseType;
+            }
+
+            return false;
+        }
+
+        // Check if string contains another string, ignoring case
+        public static bool ContainsIgnoreCase(string source, string searchTerm)
+        {
+            if (source == null || searchTerm == null) return false;
+
+            return source.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        // Get Hierarchy path of GameObject
+        public static string GetGameObjectPath(GameObject obj)
+        {
+            if (obj == null) return string.Empty; // Null check
+
+            string path = obj.name;
+            Transform parent = obj.transform.parent;
+
+            while (parent != null)
+            {
+                path = parent.name + "/" + path;
+                parent = parent.parent;
+            }
+
+            return path;
+        }
+
+        // Method to convert Glob pattern to regex pattern (modified for Unity spec * and **)
         private static string GlobToRegex(string globPattern)
         {
             StringBuilder regexBuilder = new StringBuilder();
@@ -317,67 +347,36 @@ namespace io.github.hatayama.HierarchyFinder
             return regexBuilder.ToString();
         }
 
-
-        // Method to check if a GameObject has a component of the specified type (or its derived type)
-        private static bool GameObjectHasComponentType(GameObject obj, string typeToFind)
+        // Check if the type name (including base classes) of components a GameObject has matches the specified type Glob pattern
+        private static bool MatchesTypeGlobPattern(GameObject obj, Regex typeRegex)
         {
+            // Also check the type of GameObject itself (e.g., for t:GameObject*)
+            if (typeRegex.IsMatch("GameObject"))
+            {
+                // If the type pattern is "GameObject" (or a pattern that matches it),
+                // any non-null GameObject is always considered a match.
+                if (obj != null) return true;
+            }
+
             Component[] components = obj.GetComponents<Component>();
             foreach (Component comp in components)
             {
                 if (comp == null) continue;
 
-                Type componentType = comp.GetType();
-                if (IsTypeOrBaseTypeMatch(componentType, typeToFind))
+                Type currentType = comp.GetType();
+                while (currentType != null && currentType != typeof(object))
                 {
-                    return true; // Found a matching component
+                    // Check if the type name (simple name) matches the Glob pattern (regex)
+                    if (typeRegex.IsMatch(currentType.Name))
+                    {
+                        return true; // Found a matching type
+                    }
+
+                    currentType = currentType.BaseType; // Check parent class
                 }
             }
 
-            return false; // No matching component found
-        }
-
-        // Method to check if a type or its base class matches the specified type name
-        private static bool IsTypeOrBaseTypeMatch(Type componentType, string typeToFind)
-        {
-            Type currentType = componentType;
-            while (currentType != null && currentType != typeof(object))
-            {
-                // Also compare with fully qualified name (logic from user-provided code)
-                if (currentType.Name.Equals(typeToFind, StringComparison.OrdinalIgnoreCase) ||
-                    currentType.FullName.Equals(typeToFind, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-
-                currentType = currentType.BaseType;
-            }
-
-            return false;
-        }
-
-        // Check if string contains another string, ignoring case
-        public static bool ContainsIgnoreCase(string source, string searchTerm)
-        {
-            if (source == null || searchTerm == null) return false;
-
-            return source.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0;
-        }
-
-        // Get Hierarchy path of GameObject
-        public static string GetGameObjectPath(GameObject obj)
-        {
-            if (obj == null) return string.Empty; // Null check
-
-            string path = obj.name;
-            Transform parent = obj.transform.parent;
-
-            while (parent != null)
-            {
-                path = parent.name + "/" + path;
-                parent = parent.parent;
-            }
-
-            return path;
+            return false; // No matching type found
         }
     }
 }

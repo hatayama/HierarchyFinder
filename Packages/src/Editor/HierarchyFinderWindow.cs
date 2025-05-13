@@ -136,10 +136,15 @@ namespace io.github.hatayama.HierarchyFinder
             // Does it contain Glob characters (* or ?)?
             bool containsGlob = !string.IsNullOrEmpty(fieldValue) && (fieldValue.Contains("*") || fieldValue.Contains("?"));
 
-            // Simplify button display logic
-            bool showSearchIcon = containsT || containsGlob; // Show search icon if it contains "t:" or Glob characters
-            bool showPasteButton = containsT && !containsGlob; // Show Paste button only if it contains "t:" and no Glob characters
-            bool showPingButton = !containsT && !containsGlob; // Show Ping button only if it contains neither "t:" nor Glob characters
+            // スラッシュを含まない単純な文字列も検索対象とするかどうかのフラグ
+            bool isSimpleNameQuery = !containsT && !containsGlob && !string.IsNullOrEmpty(fieldValue) && !fieldValue.Contains("/");
+
+            // 検索アイコンを表示する条件を変更: "t:"、Glob、または単純な名前クエリの場合
+            bool showSearchIcon = containsT || containsGlob || isSimpleNameQuery;
+            // Pasteボタンの条件を変更: "t:"(Glob無) または 単純な名前検索 の場合に True
+            bool showPasteButton = (containsT && !containsGlob) || isSimpleNameQuery;
+            // Pingボタンの条件を変更: "t:"、Glob、単純な名前クエリのいずれでも *なく*、かつスラッシュを含む（＝フルパス指定）の場合のみ
+            bool showPingButton = !showSearchIcon && !showPasteButton && !string.IsNullOrEmpty(fieldValue) && fieldValue.Contains("/");
 
             // Horizontal layout adjustment
             float magnifyIconButtonWidth = 25; // Width of the search icon
