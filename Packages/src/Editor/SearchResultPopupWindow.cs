@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace io.github.hatayama.HierarchyFinder
 {
     /// <summary>
-    /// Popup window class to display search results.
+    /// Popup window class for displaying search results.
     /// </summary>
     public class SearchResultPopupWindow : EditorWindow
     {
@@ -20,14 +20,6 @@ namespace io.github.hatayama.HierarchyFinder
 
         // Dictionary to track open windows for each search button (input field index)
         private static Dictionary<string, SearchResultPopupWindow> _activeWindows = new();
-
-        // For window drag processing
-        private Vector2 _dragStartPosition;
-        private bool _isDragging = false;
-
-        // For close button
-        private Rect _closeButtonRect;
-        private GUIStyle _closeButtonStyle;
 
         public static void Show(Rect buttonRect, List<HierarchySearchLogic.SearchResult> results, Action<GameObject> onObjectSelected,
             string path)
@@ -72,7 +64,6 @@ namespace io.github.hatayama.HierarchyFinder
             float windowHorizontalMargin = 20f;
             float calculatedMaxWidth = contentMaxWidth + windowHorizontalMargin;
 
-
             // Calculate content height to determine if a scrollbar is needed
             float itemHeight = 50; // Button + path + margin + box
             float titleHeight = 30; // Height of title and margin
@@ -100,7 +91,7 @@ namespace io.github.hatayama.HierarchyFinder
 
             // Set the minimum width. It won't get smaller than this.
             // For example, we want to ensure enough width to display the window title and close button at a minimum.
-            float minWindowWidth = DefaultMinWindowWidth; // ★Changed: Use constant
+            float minWindowWidth = DefaultMinWindowWidth; 
             float finalWidth = Mathf.Max(calculatedMaxWidth, minWindowWidth);
 
             // Set window position (so that the bottom right of the search button aligns with the top right of the popup)
@@ -111,8 +102,11 @@ namespace io.github.hatayama.HierarchyFinder
             popupPosition = new Vector2(popupPosition.x - finalWidth, popupPosition.y);
 
             // Display as a popup window
+            window.minSize = new Vector2(DefaultMinWindowWidth, 50f); 
+            window.maxSize = new Vector2(Screen.currentResolution.width * 0.8f, SearchWindowMaxHeight * 1.5f); 
+            window.titleContent = new GUIContent("Search Results"); 
             window.position = new Rect(popupPosition.x, popupPosition.y, finalWidth, height);
-            window.ShowPopup();
+            window.Show(); 
 
             // Call Repaint for initialization
             window.Repaint();
@@ -122,24 +116,6 @@ namespace io.github.hatayama.HierarchyFinder
         {
             // Background
             EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), new Color(0.2f, 0.2f, 0.2f, 1f));
-
-            // Draw close button (top right)
-            // Initialize style for close button
-            _closeButtonStyle = new GUIStyle(EditorStyles.miniButton);
-            _closeButtonStyle.normal.textColor = Color.white;
-            _closeButtonStyle.fontSize = 16;
-            _closeButtonStyle.fontStyle = FontStyle.Bold;
-            _closeButtonStyle.alignment = TextAnchor.MiddleCenter;
-            _closeButtonStyle.fixedWidth = 24;
-            _closeButtonStyle.fixedHeight = 24;
-            _closeButtonRect = new Rect(position.width - 30, 5, 24, 24);
-            if (GUI.Button(_closeButtonRect, "×", _closeButtonStyle))
-            {
-                Close();
-                // Use event to prevent propagation to underlying UI
-                Event.current.Use();
-                return;
-            }
 
             // Start UI layout
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -162,13 +138,15 @@ namespace io.github.hatayama.HierarchyFinder
 
             if (_results.Count == 0)
             {
-                GUILayout.Label($"Nothing found", EditorStyles.label);
+                GUILayout.Label($"No search results found.", EditorStyles.label);
+                EditorGUILayout.EndVertical();
                 return;
             }
 
             if (_results.Count >= MaxDisplayCount)
             {
-                GUILayout.Label($"Too many search results. \nWe recommend narrowing down by gameObject name or using the paste function.", EditorStyles.label);
+                GUILayout.Label($"Too many search results.\nIt is recommended to narrow down by object name or use the paste function.", EditorStyles.label);
+                EditorGUILayout.EndVertical();
                 return;
             }
 
@@ -180,7 +158,7 @@ namespace io.github.hatayama.HierarchyFinder
                 {
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                     if (GUILayout.Button(result.gameObject.name, buttonStyle))
-                    {
+                    { 
                         _onObjectSelected?.Invoke(result.gameObject);
                     }
 
@@ -200,7 +178,7 @@ namespace io.github.hatayama.HierarchyFinder
                 {
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                     if (GUILayout.Button(result.gameObject.name, buttonStyle))
-                    {
+                    { 
                         _onObjectSelected?.Invoke(result.gameObject);
                     }
 
@@ -209,10 +187,8 @@ namespace io.github.hatayama.HierarchyFinder
                     EditorGUILayout.EndVertical();
                     EditorGUILayout.Space(2);
                 }
-
                 EditorGUILayout.EndScrollView();
             }
-
             EditorGUILayout.EndVertical();
 
             if (Event.current.type == EventType.KeyDown)
@@ -220,57 +196,11 @@ namespace io.github.hatayama.HierarchyFinder
                 Close();
                 Event.current.Use();
             }
-
-            // Change processing order: check drag processing after all GUI is drawn
-            HandleWindowDrag();
         }
 
-        private void HandleWindowDrag()
+        private void OnLostFocus()
         {
-            Event evt = Event.current;
-
-            // Do not start drag on the close button
-            if (_closeButtonRect.Contains(evt.mousePosition)) return;
-
-            switch (evt.type)
-            {
-                case EventType.MouseDown:
-                    if (evt.button == 0) // Left click
-                    {
-                        // Before starting drag, check if this event is not processed by other controls
-                        // (Do not start drag if the mouse is over UI elements like buttons)
-                        if (!EditorGUIUtility.hotControl.Equals(0)) return;
-
-                        _isDragging = true;
-                        _dragStartPosition = evt.mousePosition;
-                        evt.Use();
-                    }
-
-                    break;
-
-                case EventType.MouseDrag:
-                    if (_isDragging)
-                    {
-                        Vector2 delta = evt.mousePosition - _dragStartPosition;
-                        Rect windowPos = position;
-                        windowPos.position += delta;
-                        position = windowPos;
-                        evt.Use();
-                    }
-
-                    break;
-
-                case EventType.MouseUp:
-                    if (_isDragging)
-                    {
-                        _isDragging = false;
-                        evt.Use();
-                    }
-
-                    break;
-                default:
-                    break;
-            }
+            Close();
         }
 
         private void OnDestroy()
