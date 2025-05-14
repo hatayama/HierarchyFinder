@@ -37,6 +37,39 @@ namespace io.github.hatayama.HierarchyFinder
             public List<string> items = new();
         }
 
+        // Modify record definition to not use init setters
+        private record ButtonVisibility
+        {
+            public bool ContainsT { get; }
+            public bool ContainsGlob { get; }
+            public bool IsSimpleNameQuery { get; }
+            public bool ShowSearchIcon { get; }
+            public bool ShowPasteButton { get; }
+            public bool ShowPingButton { get; }
+
+            public ButtonVisibility(bool containsT, bool containsGlob, bool isSimpleNameQuery, bool showSearchIcon, bool showPasteButton, bool showPingButton)
+            {
+                ContainsT = containsT;
+                ContainsGlob = containsGlob;
+                IsSimpleNameQuery = isSimpleNameQuery;
+                ShowSearchIcon = showSearchIcon;
+                ShowPasteButton = showPasteButton;
+                ShowPingButton = showPingButton;
+            }
+        }
+
+        private static ButtonVisibility CalculateButtonVisibility(string fieldValue)
+        {
+            bool containsT = !string.IsNullOrEmpty(fieldValue) && fieldValue.StartsWith("t:", StringComparison.OrdinalIgnoreCase);
+            bool containsGlob = !string.IsNullOrEmpty(fieldValue) && (fieldValue.Contains("*") || fieldValue.Contains("?"));
+            bool isSimpleNameQuery = !containsT && !containsGlob && !string.IsNullOrEmpty(fieldValue) && !fieldValue.Contains("/");
+            bool showSearchIcon = containsT || containsGlob || isSimpleNameQuery;
+            bool showPasteButton = (containsT && !containsGlob) || isSimpleNameQuery;
+            bool showPingButton = !showSearchIcon && !showPasteButton && !string.IsNullOrEmpty(fieldValue) && fieldValue.Contains("/");
+
+            return new ButtonVisibility(containsT, containsGlob, isSimpleNameQuery, showSearchIcon, showPasteButton, showPingButton);
+        }
+
         // Add menu item
         [MenuItem("Tools/Hierarchy Finder", false, 1000)]
         public static void ShowWindow()
@@ -131,20 +164,18 @@ namespace io.github.hatayama.HierarchyFinder
             // rect.height = EditorGUIUtility.singleLineHeight; // Removed: height is now dynamic
 
             string fieldValue = _inputFields[index];
-            // Does it contain "t:"?
-            bool containsT = !string.IsNullOrEmpty(fieldValue) && fieldValue.StartsWith("t:", StringComparison.OrdinalIgnoreCase);
-            // Does it contain Glob characters (* or ?)?
-            bool containsGlob = !string.IsNullOrEmpty(fieldValue) && (fieldValue.Contains("*") || fieldValue.Contains("?"));
+            ButtonVisibility visibility = CalculateButtonVisibility(fieldValue);
 
             // スラッシュを含まない単純な文字列も検索対象とするかどうかのフラグ
-            bool isSimpleNameQuery = !containsT && !containsGlob && !string.IsNullOrEmpty(fieldValue) && !fieldValue.Contains("/");
+            // bool isSimpleNameQuery = !visibility.ContainsT && !visibility.ContainsGlob && !string.IsNullOrEmpty(fieldValue) && !fieldValue.Contains("/"); // Commented out or remove if not needed
 
             // 検索アイコンを表示する条件を変更: "t:"、Glob、または単純な名前クエリの場合
-            bool showSearchIcon = containsT || containsGlob || isSimpleNameQuery;
+            // bool showSearchIcon = visibility.ContainsT || visibility.ContainsGlob || visibility.IsSimpleNameQuery; // Commented out or remove if not needed
             // Pasteボタンの条件を変更: "t:"(Glob無) または 単純な名前検索 の場合に True
-            bool showPasteButton = (containsT && !containsGlob) || isSimpleNameQuery;
+            // bool showPasteButton = (visibility.ContainsT && !visibility.ContainsGlob) || visibility.IsSimpleNameQuery; // Commented out or remove if not needed
             // Pingボタンの条件を変更: "t:"、Glob、単純な名前クエリのいずれでも *なく*、かつスラッシュを含む（＝フルパス指定）の場合のみ
-            bool showPingButton = !showSearchIcon && !showPasteButton && !string.IsNullOrEmpty(fieldValue) && fieldValue.Contains("/");
+            // bool showPingButton = !visibility.ShowSearchIcon && !visibility.ShowPasteButton && !string.IsNullOrEmpty(fieldValue) && fieldValue.Contains("/"); // Commented out or remove if not needed
+
 
             // Horizontal layout adjustment
             float magnifyIconButtonWidth = 25; // Width of the search icon
@@ -154,17 +185,17 @@ namespace io.github.hatayama.HierarchyFinder
 
             float actionsWidth = 0; // Initialize total width of action buttons
 
-            if (showSearchIcon)
+            if (visibility.ShowSearchIcon)
             {
                 actionsWidth += magnifyIconButtonWidth + spacing;
             }
 
             // Corrected logic for Ping/Paste button width contribution
-            if (showPasteButton)
+            if (visibility.ShowPasteButton)
             {
                 actionsWidth += buttonWidth + spacing;
             }
-            else if (showPingButton) // Only add Ping button width if Paste button is not shown
+            else if (visibility.ShowPingButton) // Only add Ping button width if Paste button is not shown
             {
                 actionsWidth += buttonWidth + spacing;
             }
@@ -188,7 +219,7 @@ namespace io.github.hatayama.HierarchyFinder
             float buttonY = rect.y; // Align to the top of the text area's rect
             float buttonHeight = EditorGUIUtility.singleLineHeight;
 
-            if (showSearchIcon)
+            if (visibility.ShowSearchIcon)
             {
                 Rect searchButtonRect = new Rect(currentX, buttonY, magnifyIconButtonWidth, buttonHeight);
                 Texture2D magnifyIcon = EditorGUIUtility.FindTexture("Search Icon");
@@ -201,7 +232,7 @@ namespace io.github.hatayama.HierarchyFinder
                 currentX += magnifyIconButtonWidth + spacing;
             }
 
-            if (showPasteButton)
+            if (visibility.ShowPasteButton)
             {
                 Rect pasteButtonRect = new Rect(currentX, buttonY, buttonWidth, buttonHeight);
                 if (GUI.Button(pasteButtonRect, ButtonTexts.Paste))
@@ -211,7 +242,7 @@ namespace io.github.hatayama.HierarchyFinder
 
                 currentX += buttonWidth + spacing;
             }
-            else if (showPingButton) // Ensure Ping button is drawn if it's supposed to be shown
+            else if (visibility.ShowPingButton) // Ensure Ping button is drawn if it's supposed to be shown
             {
                 Rect pingButtonRect = new Rect(currentX, buttonY, buttonWidth, buttonHeight);
                 if (GUI.Button(pingButtonRect, ButtonTexts.Ping))
@@ -257,12 +288,7 @@ namespace io.github.hatayama.HierarchyFinder
 
                 // Calculate the width of action buttons for the current item
                 string fieldValue = _inputFields[index];
-                bool containsT = !string.IsNullOrEmpty(fieldValue) && fieldValue.StartsWith("t:", StringComparison.OrdinalIgnoreCase);
-                bool containsGlob = !string.IsNullOrEmpty(fieldValue) && (fieldValue.Contains("*") || fieldValue.Contains("?"));
-                bool isSimpleNameQuery = !containsT && !containsGlob && !string.IsNullOrEmpty(fieldValue) && !fieldValue.Contains("/");
-                bool showSearchIcon = containsT || containsGlob || isSimpleNameQuery;
-                bool showPasteButton = (containsT && !containsGlob) || isSimpleNameQuery;
-                bool showPingButton = !showSearchIcon && !showPasteButton && !string.IsNullOrEmpty(fieldValue) && fieldValue.Contains("/");
+                ButtonVisibility visibility = CalculateButtonVisibility(fieldValue);
 
 
                 float magnifyIconButtonWidth = 25;
@@ -271,15 +297,15 @@ namespace io.github.hatayama.HierarchyFinder
                 float spacing = 4;
 
                 float currentDynamicActionsWidth = 0;
-                if (showSearchIcon)
+                if (visibility.ShowSearchIcon)
                 {
                     currentDynamicActionsWidth += magnifyIconButtonWidth + spacing;
                 }
-                if (showPasteButton)
+                if (visibility.ShowPasteButton)
                 {
                     currentDynamicActionsWidth += buttonWidth + spacing;
                 }
-                else if (showPingButton)
+                else if (visibility.ShowPingButton)
                 {
                     currentDynamicActionsWidth += buttonWidth + spacing;
                 }
