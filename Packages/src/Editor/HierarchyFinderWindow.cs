@@ -221,7 +221,6 @@ namespace io.github.hatayama.HierarchyFinder
                 EditorUtility.SetDirty(this);
                 _inputFields[index] = newValue;
                 SavePaths(); 
-                Repaint();
             }
 
             float currentX = rect.x + fieldWidth + spacing;
