@@ -22,8 +22,7 @@ namespace io.github.hatayama.HierarchyFinder
         private const string PrefsKey = "HierarchyFinderWindow";
 
         // List to store input strings
-        [SerializeField]
-        private List<string> _inputFields = new();
+        [SerializeField] private List<string> _inputFields = new();
 
         // Scroll position
         private Vector2 _scrollPosition;
@@ -212,7 +211,7 @@ namespace io.github.hatayama.HierarchyFinder
 
             // Text field - use rect.height - 4 to allow for 2px padding top (from rect.y+=2) and 2px padding bottom
             Rect textAreaRect = new Rect(rect.x, rect.y, fieldWidth, rect.height - 4); // Adjusted height
-            
+
             EditorGUI.BeginChangeCheck();
             string newValue = EditorGUI.TextArea(textAreaRect, _inputFields[index], EditorStyles.textArea);
             if (EditorGUI.EndChangeCheck())
@@ -220,7 +219,7 @@ namespace io.github.hatayama.HierarchyFinder
                 Undo.RecordObject(this, "Modify Input Field");
                 EditorUtility.SetDirty(this);
                 _inputFields[index] = newValue;
-                SavePaths(); 
+                SavePaths();
             }
 
             float currentX = rect.x + fieldWidth + spacing;
@@ -249,8 +248,6 @@ namespace io.github.hatayama.HierarchyFinder
                 {
                     SetHierarchySearchFilter(fieldValue);
                 }
-
-                currentX += buttonWidth + spacing;
             }
             else if (visibility.ShowPingButton) // Ensure Ping button is drawn if it's supposed to be shown
             {
@@ -259,7 +256,6 @@ namespace io.github.hatayama.HierarchyFinder
                 {
                     PingObject(index, pingButtonRect);
                 }
-                // currentX += buttonWidth + spacing; // Not strictly needed if it's the last button in this group
             }
 
             // Delete button
@@ -313,6 +309,7 @@ namespace io.github.hatayama.HierarchyFinder
                 {
                     currentDynamicActionsWidth += magnifyIconButtonWidth + spacing;
                 }
+
                 if (visibility.ShowPasteButton)
                 {
                     currentDynamicActionsWidth += buttonWidth + spacing;
