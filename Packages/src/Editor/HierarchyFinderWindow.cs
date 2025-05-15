@@ -22,6 +22,7 @@ namespace io.github.hatayama.HierarchyFinder
         private const string PrefsKey = "HierarchyFinderWindow";
 
         // List to store input strings
+        [SerializeField]
         private List<string> _inputFields = new();
 
         // Scroll position
@@ -211,7 +212,17 @@ namespace io.github.hatayama.HierarchyFinder
 
             // Text field - use rect.height - 4 to allow for 2px padding top (from rect.y+=2) and 2px padding bottom
             Rect textAreaRect = new Rect(rect.x, rect.y, fieldWidth, rect.height - 4); // Adjusted height
-            _inputFields[index] = EditorGUI.TextArea(textAreaRect, _inputFields[index], EditorStyles.textArea);
+            
+            EditorGUI.BeginChangeCheck();
+            string newValue = EditorGUI.TextArea(textAreaRect, _inputFields[index], EditorStyles.textArea);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(this, "Modify Input Field");
+                EditorUtility.SetDirty(this);
+                _inputFields[index] = newValue;
+                SavePaths(); 
+                Repaint();
+            }
 
             float currentX = rect.x + fieldWidth + spacing;
 
