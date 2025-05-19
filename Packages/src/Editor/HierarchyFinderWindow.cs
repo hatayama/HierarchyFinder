@@ -234,6 +234,7 @@ namespace io.github.hatayama.HierarchyFinder
 
             if (GUI.Button(deleteButtonRect, ButtonTexts.Delete, deleteButtonStyle))
             {
+                Undo.RecordObject(this, "Remove Input Field");
                 _inputFields.RemoveAt(index);
                 SavePaths();
                 Repaint();
