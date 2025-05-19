@@ -20,6 +20,7 @@ namespace io.github.hatayama.HierarchyFinder
         }
 
         private const string PrefsKey = "HierarchyFinderWindow";
+        private const string WrapTextPrefsKey = "HierarchyFinderWindow_WrapText";
 
         // List to store input strings
         [SerializeField] private List<string> _inputFields = new();
@@ -29,6 +30,9 @@ namespace io.github.hatayama.HierarchyFinder
 
         // Implement a sortable list using ReorderableList
         private ReorderableList _reorderableList;
+
+        // Setting for text wrapping
+        private bool _wrapText = true;
 
         // Restore internal class for serialization/deserialization with JsonUtility
         [Serializable]
@@ -85,6 +89,17 @@ namespace io.github.hatayama.HierarchyFinder
 
             EditorGUILayout.Space(2);
 
+            // Add toggle for text wrapping
+            bool newWrapText = EditorGUILayout.Toggle("パスの改行表示", _wrapText);
+            if (newWrapText != _wrapText)
+            {
+                _wrapText = newWrapText;
+                // 設定変更時にリストの高さを再計算させるためにRepaint
+                Repaint();
+            }
+
+            EditorGUILayout.Space(2);
+
             // Show help box only if the list is empty
             if (_inputFields.Count == 0)
             {
@@ -108,6 +123,9 @@ namespace io.github.hatayama.HierarchyFinder
         {
             // Load saved list
             LoadSavedPaths();
+            // Load wrap text setting
+            string wrapTextValue = EditorUserSettings.GetConfigValue(WrapTextPrefsKey);
+            _wrapText = !string.IsNullOrEmpty(wrapTextValue) ? (wrapTextValue == "true") : true; // デフォルトはtrue
 
             // Initialize ReorderableList
             InitializeReorderableList();
@@ -117,6 +135,8 @@ namespace io.github.hatayama.HierarchyFinder
         {
             // Save list when the window is closed
             SavePaths();
+            // Save wrap text setting
+            EditorUserSettings.SetConfigValue(WrapTextPrefsKey, _wrapText.ToString());
         }
 
         // Load saved paths
@@ -161,59 +181,48 @@ namespace io.github.hatayama.HierarchyFinder
             if (index < 0 || index >= _inputFields.Count) return;
 
             rect.y += 2;
-            // rect.height = EditorGUIUtility.singleLineHeight; // Removed: height is now dynamic
 
             string fieldValue = _inputFields[index];
             ButtonVisibility visibility = CalculateButtonVisibility(fieldValue);
 
-            // スラッシュを含まない単純な文字列も検索対象とするかどうかのフラグ
-            // bool isSimpleNameQuery = !visibility.ContainsT && !visibility.ContainsGlob && !string.IsNullOrEmpty(fieldValue) && !fieldValue.Contains("/"); // Commented out or remove if not needed
-
-            // 検索アイコンを表示する条件を変更: "t:"、Glob、または単純な名前クエリの場合
-            // bool showSearchIcon = visibility.ContainsT || visibility.ContainsGlob || visibility.IsSimpleNameQuery; // Commented out or remove if not needed
-            // Pasteボタンの条件を変更: "t:"(Glob無) または 単純な名前検索 の場合に True
-            // bool showPasteButton = (visibility.ContainsT && !visibility.ContainsGlob) || visibility.IsSimpleNameQuery; // Commented out or remove if not needed
-            // Pingボタンの条件を変更: "t:"、Glob、単純な名前クエリのいずれでも *なく*、かつスラッシュを含む（＝フルパス指定）の場合のみ
-            // bool showPingButton = !visibility.ShowSearchIcon && !visibility.ShowPasteButton && !string.IsNullOrEmpty(fieldValue) && fieldValue.Contains("/"); // Commented out or remove if not needed
-
-
-            // Horizontal layout adjustment
-            float magnifyIconButtonWidth = 25; // Width of the search icon
-            float buttonWidth = 50; // Width of Ping or Paste button
-            float deleteButtonWidth = 20; // Width of delete button
+            float magnifyIconButtonWidth = 25;
+            float buttonWidth = 50;
+            float deleteButtonWidth = 20;
             float spacing = 4;
+            float actionsWidth = 0;
 
-            float actionsWidth = 0; // Initialize total width of action buttons
+            if (visibility.ShowSearchIcon) actionsWidth += magnifyIconButtonWidth + spacing;
+            if (visibility.ShowPasteButton) actionsWidth += buttonWidth + spacing;
+            else if (visibility.ShowPingButton) actionsWidth += buttonWidth + spacing;
+            if (actionsWidth > 0) actionsWidth -= spacing;
 
-            if (visibility.ShowSearchIcon)
-            {
-                actionsWidth += magnifyIconButtonWidth + spacing;
-            }
-
-            // Corrected logic for Ping/Paste button width contribution
-            if (visibility.ShowPasteButton)
-            {
-                actionsWidth += buttonWidth + spacing;
-            }
-            else if (visibility.ShowPingButton) // Only add Ping button width if Paste button is not shown
-            {
-                actionsWidth += buttonWidth + spacing;
-            }
-
-            // Subtract the last spacing only if actionsWidth is not 0
-            if (actionsWidth > 0)
-            {
-                actionsWidth -= spacing;
-            }
-
-            float fieldWidth = rect.width - (actionsWidth + deleteButtonWidth + 8); // 8 is for some margin on left/right
+            float fieldWidth = rect.width - (actionsWidth + deleteButtonWidth + 8);
             if (fieldWidth < 0) fieldWidth = 0;
 
-            // Text field - use rect.height - 4 to allow for 2px padding top (from rect.y+=2) and 2px padding bottom
-            Rect textAreaRect = new Rect(rect.x, rect.y, fieldWidth, rect.height - 4); // Adjusted height
+            // TextField のスタイルに基づいた1行の高さを取得
+            float actualSingleLineFieldHeight = EditorStyles.textField.CalcHeight(new GUIContent(" "), float.MaxValue);
+
+            float textHeight = _wrapText
+                ? EditorStyles.textArea.CalcHeight(new GUIContent(fieldValue), fieldWidth)
+                : actualSingleLineFieldHeight; // ここを修正
+
+
+            Rect fieldRect = new Rect(rect.x, rect.y, fieldWidth, textHeight);
+
 
             EditorGUI.BeginChangeCheck();
-            string newValue = EditorGUI.TextArea(textAreaRect, _inputFields[index], EditorStyles.textArea);
+            string newValue;
+            if (_wrapText)
+            {
+                newValue = EditorGUI.TextArea(fieldRect, _inputFields[index], EditorStyles.textArea);
+            }
+            else
+            {
+                GUIStyle rightAlignedTextFieldStyle = new GUIStyle(EditorStyles.textField);
+                rightAlignedTextFieldStyle.alignment = TextAnchor.MiddleRight;
+                newValue = EditorGUI.TextField(fieldRect, _inputFields[index], rightAlignedTextFieldStyle);
+            }
+
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(this, "Modify Input Field");
@@ -223,9 +232,7 @@ namespace io.github.hatayama.HierarchyFinder
             }
 
             float currentX = rect.x + fieldWidth + spacing;
-
-            // Buttons should be vertically aligned to the top of the text area or item.
-            float buttonY = rect.y; // Align to the top of the text area's rect
+            float buttonY = rect.y;
             float buttonHeight = EditorGUIUtility.singleLineHeight;
 
             if (visibility.ShowSearchIcon)
@@ -237,7 +244,6 @@ namespace io.github.hatayama.HierarchyFinder
                     SearchObjectsAndShowPopup(fieldValue, searchButtonRect);
                     GUIUtility.ExitGUI();
                 }
-
                 currentX += magnifyIconButtonWidth + spacing;
             }
 
@@ -249,7 +255,7 @@ namespace io.github.hatayama.HierarchyFinder
                     SetHierarchySearchFilter(fieldValue);
                 }
             }
-            else if (visibility.ShowPingButton) // Ensure Ping button is drawn if it's supposed to be shown
+            else if (visibility.ShowPingButton)
             {
                 Rect pingButtonRect = new Rect(currentX, buttonY, buttonWidth, buttonHeight);
                 if (GUI.Button(pingButtonRect, ButtonTexts.Ping))
@@ -258,11 +264,8 @@ namespace io.github.hatayama.HierarchyFinder
                 }
             }
 
-            // Delete button
             Rect deleteButtonRect = new Rect(rect.x + rect.width - deleteButtonWidth, buttonY, deleteButtonWidth, buttonHeight);
-            GUIStyle deleteButtonStyle = new GUIStyle(EditorStyles.miniButton);
-            deleteButtonStyle.alignment = TextAnchor.MiddleCenter;
-
+            GUIStyle deleteButtonStyle = new GUIStyle(EditorStyles.miniButton) { alignment = TextAnchor.MiddleCenter };
             if (GUI.Button(deleteButtonRect, ButtonTexts.Delete, deleteButtonStyle))
             {
                 Undo.RecordObject(this, "Remove Input Field");
@@ -279,7 +282,6 @@ namespace io.github.hatayama.HierarchyFinder
             _reorderableList = new ReorderableList(_inputFields, typeof(string), true, false, true, false);
             _reorderableList.drawElementCallback = OnDrawElementCallback;
             _reorderableList.headerHeight = 0;
-            // _reorderableList.elementHeight = EditorGUIUtility.singleLineHeight + 6; // Replaced by elementHeightCallback
 
             _reorderableList.elementHeightCallback = (index) =>
             {
@@ -294,59 +296,41 @@ namespace io.github.hatayama.HierarchyFinder
                     return EditorGUIUtility.singleLineHeight + 6; // Default height for empty strings
                 }
 
-                // Calculate the width of action buttons for the current item
-                string fieldValue = _inputFields[index];
-                ButtonVisibility visibility = CalculateButtonVisibility(fieldValue);
+                if (!_wrapText) // 改行なしの場合
+                {
+                    // TextField のスタイルに基づいた1行の実際の高さを取得
+                    float actualSingleLineFieldHeight = EditorStyles.textField.CalcHeight(new GUIContent(" "), float.MaxValue);
+                    return actualSingleLineFieldHeight + 4; // 上下パディング込み
+                }
 
-
+                // 以下は改行ありの場合の既存ロジック
+                ButtonVisibility visibility = CalculateButtonVisibility(text);
                 float magnifyIconButtonWidth = 25;
-                float buttonWidth = 50; // Ping or Paste button
+                float buttonWidth = 50;
                 float deleteButtonWidth = 20;
                 float spacing = 4;
-
                 float currentDynamicActionsWidth = 0;
-                if (visibility.ShowSearchIcon)
-                {
-                    currentDynamicActionsWidth += magnifyIconButtonWidth + spacing;
-                }
 
-                if (visibility.ShowPasteButton)
-                {
-                    currentDynamicActionsWidth += buttonWidth + spacing;
-                }
-                else if (visibility.ShowPingButton)
-                {
-                    currentDynamicActionsWidth += buttonWidth + spacing;
-                }
-
-
+                if (visibility.ShowSearchIcon) currentDynamicActionsWidth += magnifyIconButtonWidth + spacing;
+                if (visibility.ShowPasteButton) currentDynamicActionsWidth += buttonWidth + spacing;
+                else if (visibility.ShowPingButton) currentDynamicActionsWidth += buttonWidth + spacing;
                 if (currentDynamicActionsWidth > 0) currentDynamicActionsWidth -= spacing;
 
-
-                float totalDynamicButtonWidth = currentDynamicActionsWidth + deleteButtonWidth + 8; // 8 is for left/right margins around buttons
-
+                float totalDynamicButtonWidth = currentDynamicActionsWidth + deleteButtonWidth + 8;
                 float dragHandleWidth = 15f;
                 float scrollbarAllowance = 15f;
-                float listHorizontalPadding = 20f; // Increased slightly for more robust estimation
-
-                // Estimate width available for the item content (text area + buttons)
-                // This should be based on position.width minus ReorderableList's own chrome (drag handle, scrollbar, padding)
+                float listHorizontalPadding = 20f;
                 float availableWidthForListItem = position.width - dragHandleWidth - scrollbarAllowance - listHorizontalPadding;
                 if (availableWidthForListItem < 100) availableWidthForListItem = 100;
-
 
                 float fieldWidthForCalc = availableWidthForListItem - totalDynamicButtonWidth;
                 if (fieldWidthForCalc < 50) fieldWidthForCalc = 50;
 
                 GUIContent content = new GUIContent(text);
                 float calculatedTextHeight = EditorStyles.textArea.CalcHeight(content, fieldWidthForCalc);
-
-                // The total height should be text height + top padding (from rect.y+=2) + bottom padding
-                // Original was singleLineHeight + 6. rect.y+=2 means 4px for content padding (top/bottom).
-                return calculatedTextHeight + 4; // For 2px top (rect.y) and 2px bottom padding.
+                return calculatedTextHeight + 4;
             };
 
-            // Process for adding new elements
             _reorderableList.onAddCallback = (ReorderableList list) =>
             {
                 _inputFields.Add("");
