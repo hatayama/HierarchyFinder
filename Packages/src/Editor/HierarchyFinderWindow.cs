@@ -252,6 +252,7 @@ namespace io.github.hatayama.HierarchyFinder
             // Process for adding new elements
             _reorderableList.onAddCallback = (ReorderableList list) =>
             {
+                Undo.RecordObject(this, "Add Input Field");
                 _inputFields.Add("");
                 SavePaths();
             };
