@@ -103,7 +103,6 @@ namespace io.github.hatayama.HierarchyFinder
 
             // Display as a popup window
             window.minSize = new Vector2(DefaultMinWindowWidth, 50f); 
-            window.maxSize = new Vector2(Screen.currentResolution.width * 0.8f, SearchWindowMaxHeight * 1.5f); 
             window.titleContent = new GUIContent("Search Results"); 
             window.position = new Rect(popupPosition.x, popupPosition.y, finalWidth, height);
             window.Show(); 
