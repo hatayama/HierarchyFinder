@@ -26,8 +26,7 @@ This package provides an editor window to efficiently find objects in Unity's hi
 <img width="279" alt="スクリーンショット 2025-05-08 0 07 09" src="https://github.com/user-attachments/assets/bc87bdfc-e815-47c2-9524-00ea19c05a67" />
 
 ### [Display of multiple selections]
-<img width="277" alt="スクリーンショット 2025-05-08 0 34 07" src="https://github.com/user-attachments/assets/8f8154ac-a438-415e-8c38-7df0254685c1" />
-
+<img width="279" alt="スクリーンショット 2025-05-22 19 20 05" src="https://github.com/user-attachments/assets/dc59789e-5fd7-433d-af65-2f6386f01f28" />
 
 
 ## Installation
@@ -51,10 +50,11 @@ Name：OpenUPM
 URL: https://package.openupm.com
 Scope(s)：io.github.hatayama
 ```
-![](https://github.com/hatayama/InspectorAutoAssigner/blob/main/Assets/Images/4.png?raw=true)
+<img width="753" alt="スクリーンショット 2025-05-22 19 15 10" src="https://github.com/user-attachments/assets/2bdc97ca-79f3-4669-a59f-a89736909df8" />
 
-3. Open the Package Manager window, navigate to the "Masamichi Hatayama" page in the My Registries section.
-![](https://github.com/hatayama/InspectorAutoAssigner/blob/main/Assets/Images/5.png?raw=true)
+3. Open the Package Manager window, navigate to the "hatayama" page in the My Registries section.
+<img width="554" alt="スクリーンショット 2025-05-22 19 18 24" src="https://github.com/user-attachments/assets/e495f549-9379-423b-b488-3fa31966dc7e" />
+
 
 
 ### Command
