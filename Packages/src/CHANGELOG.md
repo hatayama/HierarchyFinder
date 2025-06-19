@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.2.1](https://github.com/hatayama/HierarchyFinder/compare/v0.2.0...v0.2.1) (2025-06-19)
+
+
+### Bug Fixes
+
+* Supports prefab edit mode ([#11](https://github.com/hatayama/HierarchyFinder/issues/11)) ([3eee308](https://github.com/hatayama/HierarchyFinder/commit/3eee308756189af513ca0b3159f87a4c1f435637))
+
 ## [0.2.0](https://github.com/hatayama/HierarchyFinder/compare/v0.1.3...v0.2.0) (2025-05-19)
 
 
