@@ -50,7 +50,6 @@ Name：OpenUPM
 URL: https://package.openupm.com
 Scope(s)：io.github.hatayama
 ```
-<img width="753" alt="スクリーンショット 2025-05-22 19 15 10" src="https://github.com/user-attachments/assets/2bdc97ca-79f3-4669-a59f-a89736909df8" />
 
 3. Open the Package Manager window, navigate to the "hatayama" page in the My Registries section.
 <img width="554" alt="スクリーンショット 2025-05-22 19 18 24" src="https://github.com/user-attachments/assets/e495f549-9379-423b-b488-3fa31966dc7e" />
