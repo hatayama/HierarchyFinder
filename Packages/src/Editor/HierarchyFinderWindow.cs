@@ -266,7 +266,22 @@ namespace io.github.hatayama.HierarchyFinder
             if (index < 0 || index >= _inputFields.Count) return;
 
             string fieldValue = _inputFields[index];
-            GameObject targetObject = GameObject.Find(fieldValue);
+            GameObject targetObject = null;
+
+            // prefab edit modeかどうか判定
+            UnityEditor.SceneManagement.PrefabStage prefabStage = UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+            if (prefabStage != null)
+            {
+                // prefab edit mode時は、prefab内のオブジェクトを検索
+                GameObject prefabRoot = prefabStage.prefabContentsRoot;
+                targetObject = FindChildRecursive(prefabRoot, fieldValue);
+            }
+            else
+            {
+                // 通常モード時は従来通りGameObject.Findを使用
+                targetObject = GameObject.Find(fieldValue);
+            }
+
             if (targetObject != null)
             {
                 // GameObjectをPing（ハイライト）
@@ -279,6 +294,33 @@ namespace io.github.hatayama.HierarchyFinder
 
             // GameObjectが見つからない場合はポップアップを表示
             SearchResultPopupWindow.Show(buttonRect, new List<HierarchySearchLogic.SearchResult>(), null, "");
+        }
+
+        // prefab内の子オブジェクトを再帰的に検索するヘルパーメソッド
+        private GameObject FindChildRecursive(GameObject parent, string targetPath)
+        {
+            if (parent == null) return null;
+
+            // 現在のオブジェクトのパスを取得
+            string currentPath = HierarchySearchLogic.GetGameObjectPath(parent);
+            if (currentPath == targetPath)
+            {
+                return parent;
+            }
+
+            // 子オブジェクトを再帰的に検索
+            Transform parentTransform = parent.transform;
+            for (int i = 0; i < parentTransform.childCount; i++)
+            {
+                GameObject child = parentTransform.GetChild(i).gameObject;
+                GameObject result = FindChildRecursive(child, targetPath);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
+            return null;
         }
 
         // "t:"で始まる文字列またはGlobパターンで検索を実行し、ポップアップを表示
