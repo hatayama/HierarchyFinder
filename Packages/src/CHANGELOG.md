@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.3.0 (2025-10-05)
+
+
+### Miscellaneous Chores
+
+* release 0.3.0 ([271e2d0](https://github.com/hatayama/HierarchyFinder/commit/271e2d0ef5aace24a16f699bda357c38573f6433))
+
 ## [0.2.1](https://github.com/hatayama/HierarchyFinder/compare/v0.2.0...v0.2.1) (2025-06-19)
 
 

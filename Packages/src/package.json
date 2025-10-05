@@ -1,6 +1,6 @@
 {
   "name": "io.github.hatayama.hierarchyfinder",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "displayName": "HierarchyFinder",
   "description": "This package provides an editor window to efficiently find objects in Unity's hierarchy.",
   "unity": "2020.3",
