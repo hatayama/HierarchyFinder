@@ -229,9 +229,10 @@ namespace io.github.hatayama.HierarchyFinder
             float actualTextHeight;
             if (_enableWordWrap)
             {
+                textFieldStyle.padding = EditorStyles.textArea.padding;
                 GUIContent content = new GUIContent(fieldValue);
                 float textHeight = textFieldStyle.CalcHeight(content, fieldWidth);
-                actualTextHeight = Mathf.Max(EditorGUIUtility.singleLineHeight, textHeight);
+                actualTextHeight = textHeight;
             }
             else
             {
@@ -253,11 +254,12 @@ namespace io.github.hatayama.HierarchyFinder
             }
 
             float currentX = rect.x + fieldWidth + spacing;
+            float buttonHeight = EditorGUIUtility.singleLineHeight;
 
             // ボタン描画ロジック（フラグに基づいて簡略化も）
             if (showSearchIcon)
             {
-                Rect searchButtonRect = new Rect(currentX, rect.y, magnifyIconButtonWidth, rect.height);
+                Rect searchButtonRect = new Rect(currentX, rect.y, magnifyIconButtonWidth, buttonHeight);
                 Texture2D magnifyIcon = EditorGUIUtility.FindTexture("Search Icon");
                 if (GUI.Button(searchButtonRect, new GUIContent(magnifyIcon)))
                 {
@@ -270,7 +272,7 @@ namespace io.github.hatayama.HierarchyFinder
 
             if (showPasteButton)
             {
-                Rect pasteButtonRect = new Rect(currentX, rect.y, buttonWidth, rect.height);
+                Rect pasteButtonRect = new Rect(currentX, rect.y, buttonWidth, buttonHeight);
                 if (GUI.Button(pasteButtonRect, ButtonTexts.Paste))
                 {
                     SetHierarchySearchFilter(fieldValue);
@@ -281,16 +283,15 @@ namespace io.github.hatayama.HierarchyFinder
 
             if (showPingButton)
             {
-                Rect pingButtonRect = new Rect(currentX, rect.y, buttonWidth, rect.height);
+                Rect pingButtonRect = new Rect(currentX, rect.y, buttonWidth, buttonHeight);
                 if (GUI.Button(pingButtonRect, ButtonTexts.Ping))
                 {
                     PingObject(index, pingButtonRect);
                 }
-                // Pingボタンが最後なのでcurrentXの更新は不要
             }
 
-            // 削除ボタン（変更なし）
-            Rect deleteButtonRect = new Rect(rect.x + rect.width - deleteButtonWidth, rect.y, deleteButtonWidth, rect.height);
+            // 削除ボタン
+            Rect deleteButtonRect = new Rect(rect.x + rect.width - deleteButtonWidth, rect.y, deleteButtonWidth, buttonHeight);
             GUIStyle deleteButtonStyle = new GUIStyle(EditorStyles.miniButton);
             deleteButtonStyle.alignment = TextAnchor.MiddleCenter;
 
@@ -352,16 +353,18 @@ namespace io.github.hatayama.HierarchyFinder
             if (showPingButton) actionsWidth += buttonWidth + spacing;
             if (actionsWidth > 0) actionsWidth -= spacing;
 
-            float fieldWidth = position.width - (actionsWidth + deleteButtonWidth + 8 + 20); // 20はスクロールバー等のマージン
+            float availableWidth = position.width - 20;
+            float fieldWidth = availableWidth - (actionsWidth + deleteButtonWidth + 8);
 
             GUIStyle textFieldStyle = new GUIStyle(EditorStyles.textArea);
             textFieldStyle.alignment = TextAnchor.MiddleLeft;
             textFieldStyle.wordWrap = true;
+            textFieldStyle.padding = EditorStyles.textArea.padding;
 
             GUIContent content = new GUIContent(fieldValue);
             float textHeight = textFieldStyle.CalcHeight(content, fieldWidth);
 
-            return Mathf.Max(EditorGUIUtility.singleLineHeight, textHeight) + 6;
+            return Mathf.Max(EditorGUIUtility.singleLineHeight, textHeight + 6) + 6;
         }
 
         // 通常のパスからGameObjectを検索してPingを実行
